@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 
 class Scraper:
     url : str
@@ -11,19 +12,18 @@ class Scraper:
     def extract_data(url_f):
         data = requests.get(url_f)
         soup = BeautifulSoup(data.content, "html.parser")
-        photo_url = ""
-        page_text = ""
-        data = [
-            url_f,
-            soup.find("meta"),
-            soup.find("title"),
-            soup.find("tittle"),
-
-        ]
-        links = soup.find('img')
-        print([i.find('img')['src'] for i in links])
-        print([i.find('img')['title'] for i in links])
-        return data
-
-    def create_json(data):
+        links = []
+        page_text = []
+        for link in soup.findAll('a', attrs={'href': re.compile("^http://")}):
+            links.append(link)
+        # getting all the paragraphs
+        for para in soup.find_all("p"):
+            page_text.append(para.get_text())
+        data = {
+            "url" : str(url_f),
+            "page_meta_tag" : str(soup.find("meta")),
+            "page_title" :str(soup.find("title")),
+            "page_links": str(links),
+            "page_text" : str(page_text)
+        }
         return data
